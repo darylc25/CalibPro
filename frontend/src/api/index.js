@@ -1,11 +1,22 @@
 const BASE = '/api';
 
 async function request(path, options = {}) {
+  const token = localStorage.getItem('calibpro_token');
   const res = await fetch(`${BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
     ...options,
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
+  if (res.status === 401) {
+    localStorage.removeItem('calibpro_token');
+    localStorage.removeItem('calibpro_user');
+    window.location.href = '/';
+    return;
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(err.error || 'Request failed');
@@ -59,6 +70,12 @@ export const api = {
   createStaff: (data) => request('/staff', { method: 'POST', body: data }),
   updateStaff: (id, data) => request(`/staff/${id}`, { method: 'PUT', body: data }),
   deleteStaff: (id) => request(`/staff/${id}`, { method: 'DELETE' }),
+
+  // Users (admin only)
+  getUsers: () => request('/auth/users'),
+  createUser: (data) => request('/auth/users', { method: 'POST', body: data }),
+  updateUser: (id, data) => request(`/auth/users/${id}`, { method: 'PUT', body: data }),
+  deleteUser: (id) => request(`/auth/users/${id}`, { method: 'DELETE' }),
 };
 
 export function downloadBlob(blob, filename) {

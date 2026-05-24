@@ -1,3 +1,4 @@
+import { useAuth } from '../context/AuthContext.jsx';
 import React, { useEffect, useState } from 'react';
 import { api, formatDate } from '../api/index.js';
 import PriorityBadge from '../components/PriorityBadge.jsx';
@@ -9,6 +10,7 @@ const STATUSES = ['All', 'Active', 'Inactive', 'Under Repair', 'Decommissioned']
 const STATES = ['All', 'Kuala Lumpur', 'Selangor', 'Penang', 'Johor', 'Sabah', 'Sarawak', 'Perak', 'Pahang', 'Terengganu', 'Kedah'];
 
 export default function Equipment() {
+  const { isAdmin } = useAuth();
   const [equipment, setEquipment] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -115,18 +117,20 @@ export default function Equipment() {
                     <td className="py-3 px-4 text-gray-600">{formatDate(e.last_cal)}</td>
                     <td className="py-3 px-4 text-gray-600">{formatDate(e.next_cal)}</td>
                     <td className="py-3 px-4"><PriorityBadge nextCal={e.next_cal} /></td>
-                    <td className="py-3 px-4">
-                      <div className="flex gap-2">
-                        <button onClick={() => setShowCal({ equipmentId: e.id, customerId: e.customer_id })}
-                          className="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded hover:bg-blue-50">
-                          Cal
-                        </button>
-                        <button onClick={() => setDeleteId(e.id)}
-                          className="text-xs text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded hover:bg-red-50">
-                          Del
-                        </button>
-                      </div>
-                    </td>
+                    {isAdmin && (
+                      <td className="py-3 px-4">
+                        <div className="flex gap-2">
+                          <button onClick={() => setShowCal({ equipmentId: e.id, customerId: e.customer_id })}
+                            className="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded hover:bg-blue-50">
+                            Cal
+                          </button>
+                          <button onClick={() => setDeleteId(e.id)}
+                            className="text-xs text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded hover:bg-red-50">
+                            Del
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

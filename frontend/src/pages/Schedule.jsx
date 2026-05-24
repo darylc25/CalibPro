@@ -1,3 +1,4 @@
+import { useAuth } from '../context/AuthContext.jsx';
 import React, { useEffect, useState } from 'react';
 import { api, formatDate, getPriority, downloadBlob, daysDiff } from '../api/index.js';
 import PriorityBadge from '../components/PriorityBadge.jsx';
@@ -9,6 +10,7 @@ const STATES = ['All', 'Kuala Lumpur', 'Selangor', 'Penang', 'Johor', 'Sabah', '
 const PRIORITY_FILTERS = ['All', 'Overdue', 'Due Soon', 'Scheduled'];
 
 export default function Schedule() {
+  const { isAdmin } = useAuth();
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
@@ -112,11 +114,13 @@ export default function Schedule() {
               📅 Calendar
             </button>
           </div>
-          <button
-            onClick={() => setShowCal({})}
-            className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50">
-            + Record Calibration
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => setShowCal({})}
+              className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50">
+              + Record Calibration
+            </button>
+          )}
           <button onClick={handleExport} disabled={exporting}
             className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
             style={{ background: '#0D2847' }}>
@@ -180,20 +184,22 @@ export default function Schedule() {
                         {days}
                       </td>
                       <td className="py-2.5 px-3"><PriorityBadge nextCal={r.next_calibration_date} /></td>
-                      <td className="py-2.5 px-3">
-                        <div className="flex gap-1">
-                          <button
-                            onClick={() => setEditCal(r)}
-                            className="text-xs text-gray-600 hover:text-gray-900 font-medium px-2 py-1 rounded hover:bg-gray-100 whitespace-nowrap border border-gray-200">
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => setShowCal({ equipmentId: r.equipment_id, customerId: r.customer_id })}
-                            className="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded hover:bg-blue-50 whitespace-nowrap">
-                            + New Cal
-                          </button>
-                        </div>
-                      </td>
+                      {isAdmin && (
+                        <td className="py-2.5 px-3">
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => setEditCal(r)}
+                              className="text-xs text-gray-600 hover:text-gray-900 font-medium px-2 py-1 rounded hover:bg-gray-100 whitespace-nowrap border border-gray-200">
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => setShowCal({ equipmentId: r.equipment_id, customerId: r.customer_id })}
+                              className="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded hover:bg-blue-50 whitespace-nowrap">
+                              + New Cal
+                            </button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}

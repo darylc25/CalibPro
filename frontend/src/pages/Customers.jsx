@@ -1,3 +1,4 @@
+import { useAuth } from '../context/AuthContext.jsx';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, formatDate } from '../api/index.js';
@@ -8,6 +9,7 @@ import { useToast } from '../components/Toast.jsx';
 const STATES = ['All', 'Kuala Lumpur', 'Selangor', 'Penang', 'Johor', 'Sabah', 'Sarawak', 'Perak', 'Pahang', 'Terengganu', 'Kedah', 'Kelantan', 'Melaka', 'Negeri Sembilan'];
 
 export default function Customers() {
+  const { isAdmin } = useAuth();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -60,11 +62,13 @@ export default function Customers() {
           <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
           <p className="text-sm text-gray-500">{customers.length} customers total</p>
         </div>
-        <button onClick={() => setShowAdd(true)}
-          className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 flex items-center gap-2"
-          style={{ background: '#0D2847' }}>
-          + Add Customer
-        </button>
+        {isAdmin && (
+          <button onClick={() => setShowAdd(true)}
+            className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 flex items-center gap-2"
+            style={{ background: '#0D2847' }}>
+            + Add Customer
+          </button>
+        )}
       </div>
 
       <div className="flex gap-3">
@@ -105,12 +109,14 @@ export default function Customers() {
                     <td className="py-3 px-4 text-gray-600">{formatDate(c.last_service)}</td>
                     <td className="py-3 px-4 text-gray-600">{formatDate(c.next_due)}</td>
                     <td className="py-3 px-4"><PriorityBadge nextCal={c.next_due} /></td>
-                    <td className="py-3 px-4" onClick={e => e.stopPropagation()}>
-                      <button onClick={() => setDeleteId(c.id)}
-                        className="text-xs text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded hover:bg-red-50">
-                        Delete
-                      </button>
-                    </td>
+                    {isAdmin && (
+                      <td className="py-3 px-4" onClick={e => e.stopPropagation()}>
+                        <button onClick={() => setDeleteId(c.id)}
+                          className="text-xs text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded hover:bg-red-50">
+                          Delete
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

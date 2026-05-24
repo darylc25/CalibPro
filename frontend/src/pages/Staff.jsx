@@ -1,3 +1,4 @@
+import { useAuth } from '../context/AuthContext.jsx';
 import React, { useEffect, useState } from 'react';
 import { api } from '../api/index.js';
 import { useToast } from '../components/Toast.jsx';
@@ -142,11 +143,13 @@ export default function Staff() {
           <h1 className="text-2xl font-bold text-gray-900">Technical Staff</h1>
           <p className="text-sm text-gray-500">{activeCount} active · {staff.length} total</p>
         </div>
-        <button onClick={() => setShowAdd(true)}
-          className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 flex items-center gap-2"
-          style={{ background: '#0D2847' }}>
-          + Add Staff
-        </button>
+        {isAdmin && (
+          <button onClick={() => setShowAdd(true)}
+            className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 flex items-center gap-2"
+            style={{ background: '#0D2847' }}>
+            + Add Staff
+          </button>
+        )}
       </div>
 
       <input
@@ -204,18 +207,20 @@ export default function Staff() {
                       {s.active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
-                  <td className="py-3 px-4">
-                    <div className="flex gap-2">
-                      <button onClick={() => setEditMember(s)}
-                        className="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded hover:bg-blue-50">
-                        Edit
-                      </button>
-                      <button onClick={() => setDeleteId(s.id)}
-                        className="text-xs text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded hover:bg-red-50">
-                        Remove
-                      </button>
-                    </div>
-                  </td>
+                  {isAdmin && (
+                    <td className="py-3 px-4">
+                      <div className="flex gap-2">
+                        <button onClick={() => setEditMember(s)}
+                          className="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded hover:bg-blue-50">
+                          Edit
+                        </button>
+                        <button onClick={() => setDeleteId(s.id)}
+                          className="text-xs text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded hover:bg-red-50">
+                          Remove
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

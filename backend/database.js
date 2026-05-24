@@ -88,10 +88,36 @@ function initDb() {
       currency TEXT DEFAULT 'MYR',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      role TEXT DEFAULT 'user' CHECK(role IN ('admin', 'user')),
+      name TEXT,
+      active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 
   seedIfEmpty(db);
+  seedUsers(db);
   return db;
+}
+
+function seedUsers(db) {
+  const count = db.prepare('SELECT COUNT(*) as c FROM users').get().c;
+  if (count > 0) return;
+  const bcrypt = require('bcryptjs');
+  const users = [
+    { username: 'admin', password: 'Admin@123', role: 'admin', name: 'Administrator' },
+    { username: 'user', password: 'User@123', role: 'user', name: 'Standard User' },
+  ];
+  const insert = db.prepare('INSERT INTO users (username, password_hash, role, name) VALUES (?, ?, ?, ?)');
+  for (const u of users) {
+    insert.run(u.username, bcrypt.hashSync(u.password, 10), u.role, u.name);
+  }
+  console.log('Default users seeded: admin / user');
 }
 
 function addYears(dateStr, years) {
