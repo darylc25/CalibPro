@@ -1,8 +1,15 @@
 const Database = require('better-sqlite3');
 const path = require('path');
+const fs = require('fs');
 
 // On Railway, set DATABASE_PATH=/data/calibration.db and attach a volume at /data
 const DB_PATH = process.env.DATABASE_PATH || path.join(__dirname, 'calibration.db');
+
+// Ensure the directory exists before opening the database
+const DB_DIR = path.dirname(DB_PATH);
+if (!fs.existsSync(DB_DIR)) {
+  fs.mkdirSync(DB_DIR, { recursive: true });
+}
 
 let db;
 
