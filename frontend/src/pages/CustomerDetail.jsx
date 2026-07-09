@@ -313,7 +313,7 @@ export default function CustomerDetail() {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-xs text-gray-500 border-b">
-                {['Equipment', 'Model', 'Serial No', 'End User', 'Modules', 'Status', 'Warranty', 'Last Cal', 'Next Cal', 'Priority', ''].map(h => (
+                {['Equipment', 'Model', 'Serial No', 'End User', 'Modules', 'Status', 'Warranty', 'Last Cal (DD-MM-YYYY)', 'Next Cal (DD-MM-YYYY)', 'Priority', ''].map(h => (
                   <th key={h} className="text-left py-2 pr-3 font-medium">{h}</th>
                 ))}
               </tr>
@@ -387,7 +387,7 @@ export default function CustomerDetail() {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-xs text-gray-500 border-b">
-                {['Date', 'Equipment', 'S/N', 'Service Type', 'Next Due', 'Job Sheet', 'Performed By', 'Report Status', 'Fee', ''].map(h => (
+                {['Date (DD-MM-YYYY)', 'Equipment', 'S/N', 'Service Type', 'Next Due (DD-MM-YYYY)', 'Job Sheet', 'Performed By', 'Report Status', 'Fee', ''].map(h => (
                   <th key={h} className="text-left py-2 pr-3 font-medium">{h}</th>
                 ))}
               </tr>

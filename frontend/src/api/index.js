@@ -24,7 +24,8 @@ async function request(path, options = {}) {
   if (res.headers.get('content-type')?.includes('application/vnd.openxmlformats')) {
     return res.blob();
   }
-  return res.json();
+  const text = await res.text();
+  return text ? JSON.parse(text) : {};
 }
 
 export const api = {
@@ -41,6 +42,9 @@ export const api = {
   createEquipment: (data) => request('/equipment', { method: 'POST', body: data }),
   updateEquipment: (id, data) => request(`/equipment/${id}`, { method: 'PUT', body: data }),
   deleteEquipment: (id) => request(`/equipment/${id}`, { method: 'DELETE' }),
+  transferEquipment: (id, data) => request(`/equipment/${id}/transfer`, { method: 'POST', body: data }),
+  batchTransferEquipment: (data) => request('/equipment/batch-transfer', { method: 'POST', body: data }),
+  updateCustomerType: (id, customer_type) => request(`/customers/${id}/type`, { method: 'PATCH', body: { customer_type } }),
 
   // Calibrations
   getCalibrations: () => request('/calibrations'),
@@ -51,7 +55,16 @@ export const api = {
   deleteCalibration: (id) => request(`/calibrations/${id}`, { method: 'DELETE' }),
 
   // Dashboard
-  getDashboardStats: () => request('/dashboard/stats'),
+  getDashboardStats: (excludeDealers = false, exclude = []) => {
+    const params = [];
+    if (excludeDealers) params.push('excludeDealers=true');
+    if (exclude.length) params.push('exclude=' + exclude.map(encodeURIComponent).join(','));
+    return request(`/dashboard/stats${params.length ? '?' + params.join('&') : ''}`);
+  },
+  getPipelineStats: () => request('/pipeline/stats'),
+  getMonthDetail: (month) => request(`/dashboard/month-detail?month=${month}`),
+  getJobCodeCustomers: (code) => request(`/dashboard/jobcode-customers?code=${code}`),
+  getEquipmentTypeDetail: (name) => request(`/dashboard/equipment-type-detail?name=${encodeURIComponent(name)}`),
 
   // Export
   exportMaster: () => request('/export/master'),
@@ -76,6 +89,38 @@ export const api = {
   createUser: (data) => request('/auth/users', { method: 'POST', body: data }),
   updateUser: (id, data) => request(`/auth/users/${id}`, { method: 'PUT', body: data }),
   deleteUser: (id) => request(`/auth/users/${id}`, { method: 'DELETE' }),
+
+  // Audit log (admin only)
+  getAuditLogs: (query = '') => request(`/audit${query ? '?' + query : ''}`),
+
+  // Profile
+  getProfile: () => request('/auth/profile'),
+  updateProfile: (data) => request('/auth/profile', { method: 'PUT', body: data }),
+
+  // Change own password
+  changePassword: (data) => request('/auth/change-password', { method: 'POST', body: data }),
+  updateHint: (password_hint) => request('/auth/hint', { method: 'PUT', body: { password_hint } }),
+
+  // Get password hint (public — no auth needed)
+  getPasswordHint: (username) => request(`/auth/hint?username=${encodeURIComponent(username)}`),
+
+  // Admin reset any user's password
+  resetUserPassword: (id, data) => request(`/auth/users/${id}/reset-password`, { method: 'POST', body: data }),
+
+  // Contracts
+  getContracts: () => request('/contracts'),
+  getContract: (id) => request(`/contracts/${id}`),
+  createContract: (data) => request('/contracts', { method: 'POST', body: data }),
+  updateContractStatus: (id, status) => request(`/contracts/${id}/status`, { method: 'PATCH', body: { status } }),
+  deleteContract: (id) => request(`/contracts/${id}`, { method: 'DELETE' }),
+  validateContract: (contractNumber) => request(`/contracts/validate/${encodeURIComponent(contractNumber)}`),
+  downloadContract: (id) => request(`/contracts/${id}/download`),
+
+  // Delete requests
+  createDeleteRequest: (data) => request('/delete-requests', { method: 'POST', body: data }),
+  getDeleteRequests: () => request('/delete-requests'),
+  getPendingDeleteCount: () => request('/delete-requests/pending-count'),
+  reviewDeleteRequest: (id, data) => request(`/delete-requests/${id}`, { method: 'PUT', body: data }),
 };
 
 export function downloadBlob(blob, filename) {
@@ -98,10 +143,26 @@ export function getPriority(nextCal) {
   return 'scheduled';
 }
 
+// 'active' = still under warranty, 'expired' = past end date, null = no warranty data
+export function getWarrantyStatus(endOfWarranty) {
+  if (!endOfWarranty) return null;
+  const today = new Date().toISOString().split('T')[0];
+  return endOfWarranty >= today ? 'active' : 'expired';
+}
+
+export const WARRANTY_BADGE = {
+  active:  { label: 'In Warranty', cls: 'bg-green-100 text-green-700' },
+  expired: { label: 'Expired',     cls: 'bg-gray-100 text-gray-500' },
+};
+
 export function formatDate(dateStr) {
   if (!dateStr) return '—';
   const d = new Date(dateStr);
-  return d.toLocaleDateString('en-MY', { day: '2-digit', month: 'short', year: 'numeric' });
+  if (isNaN(d)) return '—';
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return `${dd}-${mm}-${yyyy}`;
 }
 
 export function daysDiff(dateStr) {

@@ -1,4 +1,5 @@
 import { useAuth } from '../context/AuthContext.jsx';
+import { useDealers } from '../context/DealerContext.jsx';
 import React, { useEffect, useState } from 'react';
 import { api, formatDate, getPriority, downloadBlob, daysDiff } from '../api/index.js';
 import PriorityBadge from '../components/PriorityBadge.jsx';
@@ -10,8 +11,10 @@ const STATES = ['All', 'Kuala Lumpur', 'Selangor', 'Penang', 'Johor', 'Sabah', '
 const PRIORITY_FILTERS = ['All', 'Overdue', 'Due Soon', 'Scheduled'];
 
 export default function Schedule() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isEditor } = useAuth();
+  const { showDealers } = useDealers();
   const [records, setRecords] = useState([]);
+  const [allRecords, setAllRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [stateFilter, setStateFilter] = useState('All');
@@ -25,6 +28,7 @@ export default function Schedule() {
   function load() {
     setLoading(true);
     api.getCalibrations().then(data => {
+      setAllRecords(data);
       const latest = Object.values(
         data.reduce((acc, r) => {
           if (!acc[r.equipment_id] || r.calibration_date > acc[r.equipment_id].calibration_date) {
@@ -40,6 +44,7 @@ export default function Schedule() {
   useEffect(() => { load(); }, []);
 
   const filtered = records.filter(r => {
+    if (!showDealers && r.customer_type === 'Dealer') return false;
     const q = search.toLowerCase();
     const matchSearch = !search ||
       (r.customer_name || '').toLowerCase().includes(q) ||
@@ -104,17 +109,17 @@ export default function Schedule() {
             <button
               onClick={() => setView('table')}
               className={`px-3 py-2 text-sm font-medium transition-colors ${view === 'table' ? 'text-white' : 'text-gray-600 hover:bg-gray-50'}`}
-              style={view === 'table' ? { background: '#0D2847' } : {}}>
+              style={view === 'table' ? { background: '#1A4B8C' } : {}}>
               ☰ Table
             </button>
             <button
               onClick={() => setView('calendar')}
               className={`px-3 py-2 text-sm font-medium transition-colors border-l border-gray-200 ${view === 'calendar' ? 'text-white' : 'text-gray-600 hover:bg-gray-50'}`}
-              style={view === 'calendar' ? { background: '#0D2847' } : {}}>
+              style={view === 'calendar' ? { background: '#1A4B8C' } : {}}>
               📅 Calendar
             </button>
           </div>
-          {isAdmin && (
+          {isEditor && (
             <button
               onClick={() => setShowCal({})}
               className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50">
@@ -123,14 +128,14 @@ export default function Schedule() {
           )}
           <button onClick={handleExport} disabled={exporting}
             className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
-            style={{ background: '#0D2847' }}>
+            style={{ background: '#1A4B8C' }}>
             {exporting ? '⏳' : '📤'} Export Excel
           </button>
         </div>
       </div>
 
       {view === 'calendar' && (
-        <CalendarView records={records} />
+        <CalendarView records={records} allRecords={allRecords} />
       )}
 
       {view === 'table' && <>
@@ -156,9 +161,9 @@ export default function Schedule() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead style={{ background: '#0D2847' }}>
+              <thead style={{ background: '#1A4B8C' }}>
                 <tr>
-                  {['Customer', 'State', 'Equipment', 'S/N', 'Module', 'Last Cal', 'Next Cal', 'Days', 'Status', 'Actions'].map(h => (
+                  {['Customer', 'State', 'Equipment', 'S/N', 'Module', 'Last Cal (DD-MM-YYYY)', 'Next Cal (DD-MM-YYYY)', 'Days', 'Status', 'Actions'].map(h => (
                     <th key={h} className="text-left py-3 px-3 text-xs font-semibold text-white/80 uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>
@@ -184,7 +189,7 @@ export default function Schedule() {
                         {days}
                       </td>
                       <td className="py-2.5 px-3"><PriorityBadge nextCal={r.next_calibration_date} /></td>
-                      {isAdmin && (
+                      {isEditor && (
                         <td className="py-2.5 px-3">
                           <div className="flex gap-1">
                             <button
