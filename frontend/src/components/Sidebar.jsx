@@ -29,7 +29,7 @@ const NAV_GROUPS = [
     ],
   },
   {
-    label: 'Resources',
+    label: 'Report',
     items: [
       { to: '/export', label: 'Export', icon: '📤' },
     ],
