@@ -191,7 +191,7 @@ export default function Customers() {
                         className="w-4 h-4 rounded accent-white cursor-pointer" />
                     </th>
                   )}
-                  {['Customer Name', 'Country', 'State', 'Contact', 'Equipment', 'Last Service (DD-MM-YYYY)', 'Next Due (DD-MM-YYYY)', 'Status', 'Actions'].map(h => (
+                  {['Customer Name', 'Country', 'State', 'Contact', 'Equipment', 'Last Service (DD-MM-YYYY)', 'Next Due (DD-MM-YYYY)', 'Status', ''].map(h => (
                     <th key={h} className="text-left py-3 px-4 text-xs font-semibold text-white/80 uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>
