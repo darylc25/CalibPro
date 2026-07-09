@@ -187,18 +187,20 @@ export default function Equipment() {
             <table className="w-full text-sm">
               <thead style={{ background: '#1A4B8C' }}>
                 <tr>
-                  {['Equipment', 'Brand', 'Customer', 'S/N', 'Modules', 'Status', 'Warranty', 'Last Cal (DD-MM-YYYY)', 'Next Cal (DD-MM-YYYY)', 'Priority', 'Actions'].map(h => (
+                  {['Equipment', 'Customer', 'S/N', 'Modules', 'Status', 'Warranty', 'Last Cal (DD-MM-YYYY)', 'Next Cal (DD-MM-YYYY)', 'Priority', 'Actions'].map(h => (
                     <th key={h} className="text-left py-3 px-4 text-xs font-semibold text-white/80 uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={11} className="py-8 text-center text-gray-400">No equipment found</td></tr>
+                  <tr><td colSpan={10} className="py-8 text-center text-gray-400">No equipment found</td></tr>
                 ) : filtered.map((e, i) => (
                   <tr key={e.id} className={`border-b border-gray-50 hover:bg-blue-50/30 ${i % 2 === 0 ? '' : 'bg-gray-50/40'}`}>
-                    <td className="py-3 px-4 font-semibold text-gray-900">{e.equipment_name}</td>
-                    <td className="py-3 px-4 text-xs text-gray-500">{e.brand || '—'}</td>
+                    <td className="py-3 px-4">
+                      <div className="font-semibold text-gray-900">{e.equipment_name}</div>
+                      {e.brand && <div className="text-xs text-gray-400">{e.brand}</div>}
+                    </td>
                     <td className="py-3 px-4 text-gray-700">
                       <div>{e.customer_name}</div>
                       <div className="text-xs text-gray-400">{e.customer_country ? `${e.customer_country} · ` : ''}{e.customer_state}</div>
@@ -210,12 +212,9 @@ export default function Equipment() {
                       {(() => {
                         const ws = getWarrantyStatus(e.end_of_warranty);
                         if (!ws) return <span className="text-gray-300 text-xs">—</span>;
-                        const badge = WARRANTY_BADGE[ws];
-                        return (
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${badge.cls}`}>
-                            {badge.label}
-                          </span>
-                        );
+                        return ws === 'active'
+                          ? <span className="text-green-500 font-bold text-base" title="In Warranty">✓</span>
+                          : <span className="text-red-400 font-bold text-base" title="Out of Warranty">✗</span>;
                       })()}
                     </td>
                     <td className="py-3 px-4 text-gray-600">{formatDate(e.last_cal)}</td>
