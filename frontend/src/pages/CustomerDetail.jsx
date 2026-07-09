@@ -22,6 +22,7 @@ export default function CustomerDetail() {
   const toast = useToast();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [navIds, setNavIds] = useState(location.state?.ids || null);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
   const [showEquipment, setShowEquipment] = useState(false);
@@ -42,6 +43,22 @@ export default function CustomerDetail() {
   }
 
   useEffect(() => { load(); }, [id]);
+
+  // Load full ID list as fallback when arriving via direct URL (no router state)
+  useEffect(() => {
+    if (navIds) return;
+    api.getCustomers().then(list => {
+      setNavIds(list.map(c => c.id));
+    }).catch(() => {});
+  }, []);
+
+  const currentIdx = navIds ? navIds.indexOf(parseInt(id, 10)) : -1;
+  const prevId = currentIdx > 0 ? navIds[currentIdx - 1] : null;
+  const nextId = currentIdx >= 0 && currentIdx < navIds?.length - 1 ? navIds[currentIdx + 1] : null;
+
+  function goTo(targetId) {
+    navigate(`/customers/${targetId}`, { state: { ids: navIds } });
+  }
 
   // Auto-open calibration modal when arriving from calendar (?newcal=1&equipment=ID)
   useEffect(() => {
@@ -131,10 +148,29 @@ export default function CustomerDetail() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center gap-3">
-        <button onClick={() => navigate('/customers')} className="text-sm text-gray-500 hover:text-gray-900">← Customers</button>
-        <span className="text-gray-300">/</span>
-        <span className="text-sm font-medium text-gray-900">{data.name}</span>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate('/customers')} className="text-sm text-gray-500 hover:text-gray-900">← Customers</button>
+          <span className="text-gray-300">/</span>
+          <span className="text-sm font-medium text-gray-900">{data.name}</span>
+          {navIds && currentIdx >= 0 && (
+            <span className="text-xs text-gray-400">{currentIdx + 1} / {navIds.length}</span>
+          )}
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => prevId && goTo(prevId)}
+            disabled={!prevId}
+            className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed">
+            ← Prev
+          </button>
+          <button
+            onClick={() => nextId && goTo(nextId)}
+            disabled={!nextId}
+            className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed">
+            Next →
+          </button>
+        </div>
       </div>
 
       {/* Customer Info Card */}
