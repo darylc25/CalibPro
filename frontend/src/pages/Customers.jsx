@@ -19,6 +19,13 @@ const COUNTRY_FLAG = {
   'Timor-Leste': '🇹🇱', 'Hong Kong': '🇭🇰', 'Others': '🌐',
 };
 
+const COUNTRY_CODE = {
+  'Malaysia': 'MY', 'Indonesia': 'ID', 'Vietnam': 'VN',
+  'Philippines': 'PH', 'Thailand': 'TH', 'Myanmar': 'MM',
+  'Cambodia': 'KH', 'Laos': 'LA', 'Brunei': 'BN',
+  'Timor-Leste': 'TL', 'Hong Kong': 'HK', 'Singapore': 'SG', 'Others': '??',
+};
+
 export default function Customers() {
   const { isAdmin, isEditor, canDelete } = useAuth();
   const { showDealers } = useDealers();
@@ -209,7 +216,7 @@ export default function Customers() {
                       )}
                     </td>
                     <td className="py-3 px-4 text-gray-600">
-                      {c.country ? <span>{COUNTRY_FLAG[c.country] || '🌐'} {c.country}</span> : '—'}
+                      {c.country ? <span title={c.country}>{COUNTRY_FLAG[c.country] || '🌐'} {COUNTRY_CODE[c.country] || c.country}</span> : '—'}
                     </td>
                     <td className="py-3 px-4 text-gray-600">{c.state || '—'}</td>
                     <td className="py-3 px-4 text-gray-600">{c.contact_person || '—'}</td>
