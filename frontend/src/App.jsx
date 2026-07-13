@@ -19,6 +19,7 @@ import Profile from './pages/Profile.jsx';
 import ForceChangePassword from './pages/ForceChangePassword.jsx';
 import Pipeline from './pages/Pipeline.jsx';
 import Contracts from './pages/Contracts.jsx';
+import AccessControl from './pages/AccessControl.jsx';
 
 function AppShell() {
   const { user, loading, mustChangePassword } = useAuth();
@@ -51,6 +52,7 @@ function AppShell() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/pipeline" element={<Pipeline />} />
           <Route path="/contracts" element={<Contracts />} />
+          <Route path="/access-control" element={<AccessControl />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>

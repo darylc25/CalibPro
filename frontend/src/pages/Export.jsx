@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api, downloadBlob } from '../api/index.js';
 import { useToast } from '../components/Toast.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 
 const QUARTERS = [
   { value: 1, label: 'Q1 (Jan – Mar)' },
@@ -30,7 +31,7 @@ function ExportCard({ title, description, filename, onExport, loading }) {
         <p className="text-sm text-gray-500 mt-1 mb-4">{description}</p>
         <button onClick={onExport} disabled={loading}
           className="px-5 py-2.5 text-sm font-medium text-white rounded-lg hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
-          style={{ background: '#0D2847' }}>
+          style={{ background: '#1A4B8C' }}>
           {loading ? '⏳ Generating…' : '⬇ Download Excel'}
         </button>
         {filename && <p className="text-xs text-gray-400 mt-2">Filename: {filename}</p>}
@@ -62,6 +63,7 @@ export default function Export() {
   const [selectedQuarter, setSelectedQuarter] = useState(currentQuarter());
 
   const toast = useToast();
+  const { canSendReport } = useAuth();
   const dateStr = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
@@ -248,11 +250,15 @@ TELEGRAM_CHAT_ID=-1001234567890`}</pre>
                 </select>
               </div>
               <div className="mt-5">
-                <button onClick={handleSend} disabled={loadingSend}
-                  className="px-5 py-2.5 text-sm font-medium text-white rounded-lg hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
-                  style={{ background: '#0D2847' }}>
-                  {loadingSend ? '⏳ Sending…' : '📨 Send to Telegram'}
-                </button>
+                {canSendReport ? (
+                  <button onClick={handleSend} disabled={loadingSend}
+                    className="px-5 py-2.5 text-sm font-medium text-white rounded-lg hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
+                    style={{ background: '#1A4B8C' }}>
+                    {loadingSend ? '⏳ Sending…' : '📨 Send to Telegram'}
+                  </button>
+                ) : (
+                  <p className="text-xs text-gray-400 flex items-center gap-1">🔒 No permission to send reports</p>
+                )}
               </div>
             </div>
 
@@ -280,19 +286,12 @@ TELEGRAM_CHAT_ID=-1001234567890`}</pre>
           <div className="flex items-start gap-3">
             <span className="text-2xl mt-0.5">📧</span>
             <div>
-              <h3 className="font-bold text-gray-900 mb-1">Gmail Setup</h3>
-              <p className="text-sm text-gray-500 mb-3">One-time setup — requires a Gmail App Password (not your regular password).</p>
-              <ol className="text-sm text-gray-700 space-y-1.5 list-decimal list-inside">
-                <li>Go to <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded text-xs">myaccount.google.com → Security</span></li>
-                <li>Enable <b>2-Step Verification</b> if not already on</li>
-                <li>Search <b>"App Passwords"</b> → create one named <i>CalibPro</i> → copy the 16-character password</li>
-                <li>Open <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded text-xs">backend/.env</span> and fill in:
-                  <pre className="mt-1.5 bg-gray-900 text-green-400 text-xs rounded-lg p-3 font-mono leading-relaxed overflow-x-auto">{`GMAIL_USER=yourname@gmail.com
-GMAIL_APP_PASSWORD=abcd efgh ijkl mnop
-EMAIL_RECIPIENT=boss@company.com`}</pre>
-                </li>
-                <li>Restart the backend, then click <b>Test Email</b> below</li>
-              </ol>
+              <h3 className="font-bold text-gray-900 mb-1">Email Setup — Gmail OAuth2 ✅ Configured</h3>
+              <p className="text-sm text-gray-500 mb-3">Emails are sent directly from <b>darylc25@gmail.com</b> via Gmail API. No SMTP needed.</p>
+              <div className="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
+                <span>✅</span>
+                <span>Gmail OAuth2 is active — Railway variables <code className="font-mono text-xs">GMAIL_CLIENT_ID</code>, <code className="font-mono text-xs">GMAIL_CLIENT_SECRET</code> and <code className="font-mono text-xs">GMAIL_REFRESH_TOKEN</code> are set.</span>
+              </div>
             </div>
           </div>
         </div>
@@ -350,7 +349,7 @@ EMAIL_RECIPIENT=boss@company.com`}</pre>
                           ${checked
                             ? 'bg-navy/10 border-navy/30 text-gray-900'
                             : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
-                        style={checked ? { background: '#0D284712', borderColor: '#0D284740' } : {}}
+                        style={checked ? { background: '#1A4B8C12', borderColor: '#1A4B8C40' } : {}}
                       >
                         <input
                           type="checkbox"
@@ -388,11 +387,15 @@ EMAIL_RECIPIENT=boss@company.com`}</pre>
                 </select>
               </div>
               <div className="mt-5">
-                <button onClick={handleEmailSend} disabled={loadingEmailSend}
-                  className="px-5 py-2.5 text-sm font-medium text-white rounded-lg hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
-                  style={{ background: '#0D2847' }}>
-                  {loadingEmailSend ? '⏳ Sending…' : '📨 Send Email Report'}
-                </button>
+                {canSendReport ? (
+                  <button onClick={handleEmailSend} disabled={loadingEmailSend}
+                    className="px-5 py-2.5 text-sm font-medium text-white rounded-lg hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
+                    style={{ background: '#1A4B8C' }}>
+                    {loadingEmailSend ? '⏳ Sending…' : '📨 Send Email Report'}
+                  </button>
+                ) : (
+                  <p className="text-xs text-gray-400 flex items-center gap-1">🔒 No permission to send reports</p>
+                )}
               </div>
             </div>
 
@@ -415,7 +418,7 @@ EMAIL_RECIPIENT=boss@company.com`}</pre>
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
         <h3 className="text-sm font-semibold text-blue-900 mb-2">Excel Format Notes</h3>
         <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
-          <li>Header row: navy (#0D2847) background, white bold text, frozen for scrolling</li>
+          <li>Header row: navy (#1A4B8C) background, white bold text, frozen for scrolling</li>
           <li>Overdue rows highlighted red (#FDECEA), due-soon rows amber (#FFF3CD)</li>
           <li>Auto-filter enabled on all columns · Currency MYR throughout</li>
         </ul>

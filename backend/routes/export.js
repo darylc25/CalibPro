@@ -2,30 +2,7 @@ const express = require('express');
 const router = express.Router();
 const ExcelJS = require('exceljs');
 const { getDb } = require('../database');
-
-const NAVY = '0D2847';
-const OVERDUE_BG = 'FDECEA';
-const DUE_SOON_BG = 'FFF3CD';
-
-function getPriority(nextCal) {
-  if (!nextCal) return 'unknown';
-  const today = new Date().toISOString().split('T')[0];
-  const soon = new Date();
-  soon.setDate(soon.getDate() + 30);
-  const soonStr = soon.toISOString().split('T')[0];
-  if (nextCal < today) return 'overdue';
-  if (nextCal <= soonStr) return 'due_soon';
-  return 'scheduled';
-}
-
-function daysDiff(dateStr) {
-  if (!dateStr) return '';
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const d = new Date(dateStr);
-  const diff = Math.round((today - d) / (1000 * 60 * 60 * 24));
-  return diff > 0 ? diff : 0;
-}
+const { NAVY, OVERDUE_BG, DUE_SOON_BG, LATEST_CAL_SUBQUERY, getPriority, daysDiff } = require('../utils/reportHelpers');
 
 router.get('/master', async (req, res) => {
   try {
@@ -141,9 +118,7 @@ router.get('/schedule', async (req, res) => {
       FROM calibration_records cr
       JOIN equipment e ON e.id = cr.equipment_id
       JOIN customers c ON c.id = cr.customer_id
-      INNER JOIN (
-        SELECT equipment_id, MAX(calibration_date) as max_date FROM calibration_records GROUP BY equipment_id
-      ) latest ON cr.equipment_id = latest.equipment_id AND cr.calibration_date = latest.max_date
+      INNER JOIN (${LATEST_CAL_SUBQUERY}) latest ON cr.equipment_id = latest.equipment_id AND cr.calibration_date = latest.max_date
       ORDER BY cr.next_calibration_date ASC
     `).all();
 

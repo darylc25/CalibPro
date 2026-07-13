@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api/index.js';
+import BaseModal from './BaseModal.jsx';
 
-const SERVICE_TYPES = ['Calibration', 'Maintenance', 'Repair', 'Installation', 'Inspection'];
+const SERVICE_TYPES = ['Calibration', 'Repair', 'Maintenance', 'Add-on Modules', 'Installation', 'Inspection'];
 const CAL_STATUSES = ['Completed', 'Pending', 'In Progress', 'Failed'];
 const TODAY = new Date().toISOString().split('T')[0];
 
@@ -17,6 +18,7 @@ export default function RecordCalibrationModal({
   onSave,
   initialEquipmentId,
   initialCustomerId,
+  initialServiceType,
   record, // pass an existing calibration record to enter edit mode
 }) {
   const isEdit = !!record;
@@ -48,7 +50,7 @@ export default function RecordCalibrationModal({
       calibration_date: TODAY,
       next_calibration_date: addOneYear(TODAY),
       performed_by: '',
-      service_type: 'Calibration',
+      service_type: initialServiceType || 'Calibration',
       job_sheet_number: '',
       cal_report_status: 'Completed',
       quotation_sent: false,
@@ -103,22 +105,10 @@ export default function RecordCalibrationModal({
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b">
-          <div>
-            <h2 className="text-lg font-bold text-gray-900">
-              {isEdit ? 'Edit Calibration Record' : 'Record Calibration'}
-            </h2>
-            {isEdit && (
-              <p className="text-xs text-gray-400 mt-0.5">
-                {record.equipment_name} · {record.customer_name}
-              </p>
-            )}
-          </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
-        </div>
-
+    <BaseModal title={isEdit ? 'Edit Job' : 'Log Job'} onClose={onClose}
+      subtitle={isEdit ? <>{record.equipment_name} · {record.customer_name}</> : null}
+      subtitleClassName="text-gray-400"
+      maxWidth="max-w-xl" containerClassName="max-h-[90vh] flex flex-col">
         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
           {!isEdit && (
             <>
@@ -147,14 +137,14 @@ export default function RecordCalibrationModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Calibration Date *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Job Date *</label>
               <input type="date" value={form.calibration_date} onChange={set('calibration_date')} required
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy" />
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Next Calibration</label>
               <input type="date" value={form.next_calibration_date} onChange={set('next_calibration_date')}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy" />
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
           </div>
 
@@ -197,9 +187,9 @@ export default function RecordCalibrationModal({
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Cal Report Status</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Job Status</label>
               <select value={form.cal_report_status} onChange={set('cal_report_status')}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy">
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 {CAL_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
@@ -233,12 +223,11 @@ export default function RecordCalibrationModal({
             </button>
             <button type="submit" disabled={loading}
               className="px-5 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 disabled:opacity-50"
-              style={{ background: '#0D2847' }}>
-              {loading ? 'Saving…' : isEdit ? 'Update Record' : 'Record Calibration'}
+              style={{ background: '#1A4B8C' }}>
+              {loading ? 'Saving…' : isEdit ? 'Update Job' : 'Save Job'}
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </BaseModal>
   );
 }

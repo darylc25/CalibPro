@@ -131,6 +131,15 @@ export default function Sidebar() {
                 {!collapsed && <span>Audit Log</span>}
               </NavLink>
             )}
+            {isAdmin && (
+              <NavLink to="/access-control"
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                  ${isActive ? 'bg-white/20 text-white' : 'text-white/60 hover:bg-white/10 hover:text-white'}`}>
+                <span className="text-lg flex-shrink-0">🔐</span>
+                {!collapsed && <span>Access Control</span>}
+              </NavLink>
+            )}
           </div>
         )}
 

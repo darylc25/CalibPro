@@ -185,6 +185,57 @@ function migratePermissions(db) {
   try { db.exec('ALTER TABLE customers ADD COLUMN address_2 TEXT'); } catch { /* already exists */ }
   try { db.exec('ALTER TABLE customers ADD COLUMN city_postcode TEXT'); } catch { /* already exists */ }
 
+  // Access Control: password policy
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS password_policy (
+      id INTEGER PRIMARY KEY DEFAULT 1,
+      min_length INTEGER DEFAULT 8,
+      require_digit INTEGER DEFAULT 1,
+      require_lowercase INTEGER DEFAULT 1,
+      require_uppercase INTEGER DEFAULT 0,
+      require_symbol INTEGER DEFAULT 0,
+      prevent_reuse_count INTEGER DEFAULT 0,
+      lockout_attempts INTEGER DEFAULT 5,
+      lockout_duration INTEGER DEFAULT 30
+    )
+  `);
+  const policyExists = db.prepare('SELECT id FROM password_policy WHERE id = 1').get();
+  if (!policyExists) db.prepare('INSERT INTO password_policy (id) VALUES (1)').run();
+
+  // Access Control: role permissions
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS role_permissions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      role TEXT NOT NULL,
+      menu TEXT NOT NULL,
+      can_view INTEGER DEFAULT 0,
+      can_add INTEGER DEFAULT 0,
+      can_edit INTEGER DEFAULT 0,
+      can_delete INTEGER DEFAULT 0,
+      UNIQUE(role, menu)
+    )
+  `);
+  // Seed default permissions if empty
+  const permCount = db.prepare('SELECT COUNT(*) as n FROM role_permissions').get().n;
+  if (permCount === 0) {
+    const MENUS = ['Dashboard','Customers','Equipment','Jobs','Schedule','Contracts','Pipeline','Export','Users & Staff','Delete Requests','Audit Log','Access Control'];
+    const DEFAULTS = {
+      administrator: { can_view:1, can_add:1, can_edit:1, can_delete:1 },
+      engineer:      { can_view:1, can_add:1, can_edit:1, can_delete:0 },
+      admin_assist:  { can_view:1, can_add:1, can_edit:1, can_delete:0 },
+      viewer:        { can_view:1, can_add:0, can_edit:0, can_delete:0 },
+    };
+    const insertPerm = db.prepare('INSERT INTO role_permissions (role, menu, can_view, can_add, can_edit, can_delete) VALUES (?,?,?,?,?,?)');
+    const seedPerms = db.transaction(() => {
+      for (const [role, perms] of Object.entries(DEFAULTS)) {
+        for (const menu of MENUS) {
+          insertPerm.run(role, menu, perms.can_view, perms.can_add, perms.can_edit, perms.can_delete);
+        }
+      }
+    });
+    seedPerms();
+  }
+
   // Service contracts table
   db.exec(`
     CREATE TABLE IF NOT EXISTS service_contracts (

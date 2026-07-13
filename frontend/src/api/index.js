@@ -116,6 +116,12 @@ export const api = {
   validateContract: (contractNumber) => request(`/contracts/validate/${encodeURIComponent(contractNumber)}`),
   downloadContract: (id) => request(`/contracts/${id}/download`),
 
+  // Access Control
+  getPasswordPolicy: () => request('/access-control/password-policy'),
+  updatePasswordPolicy: (data) => request('/access-control/password-policy', { method: 'PUT', body: data }),
+  getRolePermissions: () => request('/access-control/role-permissions'),
+  updateRolePermissions: (permissions) => request('/access-control/role-permissions', { method: 'PUT', body: { permissions } }),
+
   // Delete requests
   createDeleteRequest: (data) => request('/delete-requests', { method: 'POST', body: data }),
   getDeleteRequests: () => request('/delete-requests'),

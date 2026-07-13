@@ -1,54 +1,62 @@
 const express = require('express');
 const router = express.Router();
-const nodemailer = require('nodemailer');
+const { google } = require('googleapis');
 const ExcelJS = require('exceljs');
 const { getDb } = require('../database');
+const { NAVY, OVERDUE_BG, DUE_SOON_BG, getPriority, fmtDate, getQuarter, quarterRange } = require('../utils/reportHelpers');
 
-const NAVY = '0D2847';
-const OVERDUE_BG = 'FDECEA';
-const DUE_SOON_BG = 'FFF3CD';
-
-function getQuarter(date) {
-  return Math.floor(date.getMonth() / 3) + 1;
+// Gmail API via OAuth2 — uses HTTPS port 443, works on Railway
+function createGmailClient() {
+  const clientId     = process.env.GMAIL_CLIENT_ID;
+  const clientSecret = process.env.GMAIL_CLIENT_SECRET;
+  const refreshToken = process.env.GMAIL_REFRESH_TOKEN;
+  if (!clientId || !clientSecret || !refreshToken) {
+    throw new Error('Gmail OAuth2 not configured — set GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN in Railway Variables');
+  }
+  const oauth2 = new google.auth.OAuth2(clientId, clientSecret, 'http://localhost:3333/callback');
+  oauth2.setCredentials({ refresh_token: refreshToken });
+  return google.gmail({ version: 'v1', auth: oauth2 });
 }
 
-function quarterRange(year, quarter) {
-  const startMonth = (quarter - 1) * 3;
-  const start = new Date(year, startMonth, 1);
-  const end = new Date(year, startMonth + 3, 0);
-  return {
-    start: start.toISOString().split('T')[0],
-    end: end.toISOString().split('T')[0],
-    label: `Q${quarter} ${year}`,
-    months: ['January – March', 'April – June', 'July – September', 'October – December'][quarter - 1],
-  };
+function buildRawMessage({ from, to, subject, html, attachments }) {
+  const boundary = `CalibPro_${Date.now()}`;
+  const toLine = Array.isArray(to) ? to.join(', ') : to;
+  const lines = [
+    `From: ${from}`,
+    `To: ${toLine}`,
+    `Subject: ${subject}`,
+    'MIME-Version: 1.0',
+    `Content-Type: multipart/mixed; boundary="${boundary}"`,
+    '',
+    `--${boundary}`,
+    'Content-Type: text/html; charset=utf-8',
+    'Content-Transfer-Encoding: quoted-printable',
+    '',
+    html,
+  ];
+  if (attachments) {
+    for (const att of attachments) {
+      lines.push(`--${boundary}`);
+      lines.push(`Content-Type: ${att.contentType}`);
+      lines.push(`Content-Disposition: attachment; filename="${att.filename}"`);
+      lines.push('Content-Transfer-Encoding: base64');
+      lines.push('');
+      lines.push(att.content.toString('base64'));
+    }
+  }
+  lines.push(`--${boundary}--`);
+  return Buffer.from(lines.join('\r\n')).toString('base64url');
 }
 
-function getPriority(nextCal) {
-  if (!nextCal) return 'unknown';
-  const today = new Date().toISOString().split('T')[0];
-  const soon = new Date();
-  soon.setDate(soon.getDate() + 30);
-  if (nextCal < today) return 'overdue';
-  if (nextCal <= soon.toISOString().split('T')[0]) return 'due_soon';
-  return 'scheduled';
-}
-
-function fmtDate(d) {
-  if (!d) return '—';
-  return new Date(d).toLocaleDateString('en-MY', { day: '2-digit', month: 'short', year: 'numeric' });
-}
-
-function createTransporter() {
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD,
-    },
+async function sendEmail({ to, subject, html, attachments }) {
+  const gmailUser = process.env.GMAIL_USER;
+  if (!gmailUser) throw new Error('GMAIL_USER not set');
+  const gmail = createGmailClient();
+  const raw = buildRawMessage({
+    from: `CalibPro Reports <${gmailUser}>`,
+    to, subject, html, attachments,
   });
+  await gmail.users.messages.send({ userId: 'me', requestBody: { raw } });
 }
 
 async function buildExcelAttachment(db) {
@@ -248,17 +256,13 @@ function buildHtmlReport({ range, nextRange, calsDone, customersServed, equipmen
 
 router.post('/quarterly', async (req, res) => {
   try {
-    const gmailUser = process.env.GMAIL_USER;
-    const appPassword = process.env.GMAIL_APP_PASSWORD;
     // Accept custom recipients from request body, fall back to .env default
     const extraRecipients = Array.isArray(req.body.recipients) ? req.body.recipients : [];
     const defaultRecipient = process.env.EMAIL_RECIPIENT;
-    const allRecipients = extraRecipients.length > 0 ? extraRecipients : [defaultRecipient];
+    const allRecipients = extraRecipients.length > 0 ? extraRecipients : [defaultRecipient].filter(Boolean);
     const recipient = allRecipients.join(', ');
 
-    if (!gmailUser || gmailUser === 'your_gmail@gmail.com') return res.status(400).json({ error: 'GMAIL_USER not configured in .env' });
-    if (!appPassword || appPassword === 'xxxx xxxx xxxx xxxx') return res.status(400).json({ error: 'GMAIL_APP_PASSWORD not configured in .env' });
-    if (!recipient || recipient.trim() === '') return res.status(400).json({ error: 'No recipients specified' });
+    if (!recipient || recipient.trim() === '') return res.status(400).json({ error: 'No recipients specified — set EMAIL_RECIPIENT in Railway' });
 
     const db = getDb();
     const now = new Date();
@@ -311,10 +315,8 @@ router.post('/quarterly', async (req, res) => {
     const excelBuffer = await buildExcelAttachment(db);
     const dateStr = now.toISOString().split('T')[0];
 
-    const transporter = createTransporter();
-    await transporter.sendMail({
-      from: `"CalibPro Reports" <${gmailUser}>`,
-      to: recipient,
+    await sendEmail({
+      to: allRecipients,
       subject: `📊 CalibPro ${range.label} Calibration Report — ${overdueRows.length} Overdue`,
       html,
       attachments: [{
@@ -344,19 +346,11 @@ router.post('/quarterly', async (req, res) => {
 
 router.get('/test', async (req, res) => {
   try {
-    const gmailUser = process.env.GMAIL_USER;
-    const appPassword = process.env.GMAIL_APP_PASSWORD;
     const recipient = process.env.EMAIL_RECIPIENT;
+    if (!recipient) return res.status(400).json({ error: 'EMAIL_RECIPIENT not configured' });
 
-    if (!gmailUser || gmailUser === 'your_gmail@gmail.com') return res.status(400).json({ error: 'GMAIL_USER not configured' });
-    if (!appPassword || appPassword === 'xxxx xxxx xxxx xxxx') return res.status(400).json({ error: 'GMAIL_APP_PASSWORD not configured' });
-    if (!recipient || recipient === 'recipient@email.com') return res.status(400).json({ error: 'EMAIL_RECIPIENT not configured' });
-
-    const transporter = createTransporter();
-    await transporter.verify();
-    await transporter.sendMail({
-      from: `"CalibPro Reports" <${gmailUser}>`,
-      to: recipient,
+    await sendEmail({
+      to: [recipient],
       subject: '✅ CalibPro Email Connected',
       html: `<div style="font-family:Arial,sans-serif;padding:24px;max-width:480px">
         <h2 style="color:#0D2847">✅ CalibPro email is working!</h2>
@@ -365,7 +359,7 @@ router.get('/test', async (req, res) => {
       </div>`,
     });
 
-    res.json({ success: true, from: gmailUser, to: recipient });
+    res.json({ success: true, from: process.env.GMAIL_USER, to: recipient });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

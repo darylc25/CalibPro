@@ -14,13 +14,24 @@ function requireAuth(req, res, next) {
   }
 }
 
+// Administrator only (also accept legacy 'admin')
 function requireAdmin(req, res, next) {
   requireAuth(req, res, () => {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Admin access required' });
+    if (!['administrator', 'admin'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Administrator access required' });
     }
     next();
   });
 }
 
-module.exports = { requireAuth, requireAdmin };
+// Administrator, Engineer or Admin Assist (also accept legacy 'admin', 'editor')
+function requireEditor(req, res, next) {
+  requireAuth(req, res, () => {
+    if (!['administrator', 'engineer', 'admin_assist', 'admin', 'editor'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'You have view-only access' });
+    }
+    next();
+  });
+}
+
+module.exports = { requireAuth, requireAdmin, requireEditor };
