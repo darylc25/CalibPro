@@ -187,7 +187,7 @@ export default function Equipment() {
             <table className="w-full text-sm">
               <thead style={{ background: '#1A4B8C' }}>
                 <tr>
-                  {['Equipment', 'Customer', 'S/N', 'Modules', 'Warranty', 'Last Cal (DD-MM-YYYY)', 'Next Cal (DD-MM-YYYY)', 'Priority', ''].map(h => (
+                  {['Equipment', 'Customer', 'S/N', 'Modules', 'Status', 'Last Cal (DD-MM-YYYY)', 'Next Cal (DD-MM-YYYY)', 'Priority', ''].map(h => (
                     <th key={h} className="text-left py-3 px-4 text-xs font-semibold text-white/80 uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>
@@ -210,9 +210,18 @@ export default function Equipment() {
                     <td className="py-3 px-4">
                       {(() => {
                         const s = (e.status || '').toLowerCase();
-                        if (s === 'warranty') return <span className="text-green-500 font-bold text-base" title="Warranty">✓</span>;
-                        if (s === 'out of warranty') return <span className="text-red-500 font-bold text-base" title="Out of Warranty">✗</span>;
-                        return <span className="text-gray-400 text-xs">{e.status || '—'}</span>;
+                        const isWarranty = s.includes('warranty') && !s.includes('out of warranty');
+                        const isNoWarranty = s.includes('out of warranty');
+                        const isContract = (s.includes('service contract') || s.includes('contract')) && !s.includes('out of contract');
+                        const isActive = e.status === 'Active';
+                        return (
+                          <div className="flex flex-col gap-1">
+                            {isWarranty && <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700 whitespace-nowrap">Warranty</span>}
+                            {isNoWarranty && <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-600 whitespace-nowrap">No Warranty</span>}
+                            {(isContract || isActive) && <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700 whitespace-nowrap">Active</span>}
+                            {!isWarranty && !isNoWarranty && !isContract && !isActive && <span className="text-gray-300 text-xs">—</span>}
+                          </div>
+                        );
                       })()}
                     </td>
                     <td className="py-3 px-4 text-gray-600">{formatDate(e.last_cal)}</td>
