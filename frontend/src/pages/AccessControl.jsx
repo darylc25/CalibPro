@@ -506,8 +506,8 @@ export default function AccessControl() {
       <div className="flex border-b border-gray-200">
         {[
           { key: 'staff',       label: '👷 Staff' },
-          { key: 'password',    label: '🔒 Password Policy' },
           { key: 'permissions', label: '🛡 Role & Permission' },
+          { key: 'password',    label: '🔒 Password Policy' },
         ].map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
             className={`px-5 py-2.5 text-sm font-medium border-b-2 transition-colors ${tab === t.key ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
