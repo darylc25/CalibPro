@@ -215,7 +215,7 @@ export default function Equipment() {
                         const isContract = (s.includes('service contract') || s.includes('contract')) && !s.includes('out of contract');
                         const isActive = e.status === 'Active';
                         return (
-                          <div className="flex flex-col gap-1">
+                          <div className="flex flex-col gap-1 items-center">
                             {isWarranty && <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200 whitespace-nowrap">Warranty</span>}
                             {isNoWarranty && <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200 whitespace-nowrap">No Warranty</span>}
                             {(isContract || isActive) && <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200 whitespace-nowrap">Active</span>}
