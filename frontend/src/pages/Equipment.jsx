@@ -187,14 +187,14 @@ export default function Equipment() {
             <table className="w-full text-sm">
               <thead style={{ background: '#1A4B8C' }}>
                 <tr>
-                  {['Equipment', 'Customer', 'S/N', 'Modules', 'Status', 'Warranty', 'Last Cal (DD-MM-YYYY)', 'Next Cal (DD-MM-YYYY)', 'Priority', 'Actions'].map(h => (
+                  {['Equipment', 'Customer', 'S/N', 'Modules', 'Warranty', 'Last Cal (DD-MM-YYYY)', 'Next Cal (DD-MM-YYYY)', 'Priority', 'Actions'].map(h => (
                     <th key={h} className="text-left py-3 px-4 text-xs font-semibold text-white/80 uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={10} className="py-8 text-center text-gray-400">No equipment found</td></tr>
+                  <tr><td colSpan={9} className="py-8 text-center text-gray-400">No equipment found</td></tr>
                 ) : filtered.map((e, i) => (
                   <tr key={e.id} className={`border-b border-gray-50 hover:bg-blue-50/30 ${i % 2 === 0 ? '' : 'bg-gray-50/40'}`}>
                     <td className="py-3 px-4">
@@ -207,14 +207,12 @@ export default function Equipment() {
                     </td>
                     <td className="py-3 px-4 font-mono text-xs text-gray-600">{e.serial_number || '—'}</td>
                     <td className="py-3 px-4 text-gray-600 text-xs max-w-36 truncate">{e.modules || '—'}</td>
-                    <td className="py-3 px-4 text-gray-600">{e.status}</td>
                     <td className="py-3 px-4">
                       {(() => {
-                        const ws = getWarrantyStatus(e.end_of_warranty);
-                        if (!ws) return <span className="text-gray-300 text-xs">—</span>;
-                        return ws === 'active'
-                          ? <span className="text-green-500 font-bold text-base" title="In Warranty">✓</span>
-                          : <span className="text-red-400 font-bold text-base" title="Out of Warranty">✗</span>;
+                        const s = (e.status || '').toLowerCase();
+                        if (s === 'warranty') return <span className="text-green-500 font-bold text-base" title="Warranty">✓</span>;
+                        if (s === 'out of warranty') return <span className="text-red-500 font-bold text-base" title="Out of Warranty">✗</span>;
+                        return <span className="text-gray-400 text-xs">{e.status || '—'}</span>;
                       })()}
                     </td>
                     <td className="py-3 px-4 text-gray-600">{formatDate(e.last_cal)}</td>
