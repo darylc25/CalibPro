@@ -216,9 +216,9 @@ export default function Equipment() {
                         const isActive = e.status === 'Active';
                         return (
                           <div className="flex flex-col gap-1">
-                            {isWarranty && <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700 whitespace-nowrap">Warranty</span>}
-                            {isNoWarranty && <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-600 whitespace-nowrap">No Warranty</span>}
-                            {(isContract || isActive) && <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700 whitespace-nowrap">Active</span>}
+                            {isWarranty && <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200 whitespace-nowrap">Warranty</span>}
+                            {isNoWarranty && <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200 whitespace-nowrap">No Warranty</span>}
+                            {(isContract || isActive) && <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200 whitespace-nowrap">Active</span>}
                             {!isWarranty && !isNoWarranty && !isContract && !isActive && <span className="text-gray-300 text-xs">—</span>}
                           </div>
                         );
