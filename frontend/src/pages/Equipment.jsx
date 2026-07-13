@@ -187,7 +187,7 @@ export default function Equipment() {
             <table className="w-full text-sm">
               <thead style={{ background: '#1A4B8C' }}>
                 <tr>
-                  {['Equipment', 'Customer', 'S/N', 'Modules', 'Warranty', 'Last Cal (DD-MM-YYYY)', 'Next Cal (DD-MM-YYYY)', 'Priority', 'Actions'].map(h => (
+                  {['Equipment', 'Customer', 'S/N', 'Modules', 'Warranty', 'Last Cal (DD-MM-YYYY)', 'Next Cal (DD-MM-YYYY)', 'Priority', ''].map(h => (
                     <th key={h} className="text-left py-3 px-4 text-xs font-semibold text-white/80 uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>
@@ -223,8 +223,12 @@ export default function Equipment() {
                         <div className="flex gap-2">
                           {isEditor && (
                             <button onClick={() => setShowCal({ equipmentId: e.id, customerId: e.customer_id })}
-                              className="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded hover:bg-blue-50">
-                              Log Job
+                              title="Log Job"
+                              className="text-blue-500 hover:text-blue-700 p-1.5 rounded hover:bg-blue-50 transition-colors">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                                <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd"/>
+                              </svg>
                             </button>
                           )}
                           {canDelete && (
