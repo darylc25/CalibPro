@@ -92,13 +92,6 @@ export default function Sidebar() {
               <p className="text-white/40 text-[10px] uppercase tracking-wide font-semibold px-3 mt-3 mb-1">Administration</p>
             )}
             {collapsed && <div className="border-t border-white/10 my-2" />}
-            <NavLink to="/users"
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                ${isActive ? 'bg-white/20 text-white' : 'text-white/60 hover:bg-white/10 hover:text-white'}`}>
-              <span className="text-lg flex-shrink-0">👷</span>
-              {!collapsed && <span>Staff</span>}
-            </NavLink>
             {isAdmin && (
               <NavLink to="/delete-requests"
                 className={({ isActive }) =>

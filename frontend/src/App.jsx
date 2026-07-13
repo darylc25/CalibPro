@@ -44,9 +44,9 @@ function AppShell() {
           <Route path="/equipment" element={<Equipment />} />
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/jobs" element={<Jobs />} />
-          <Route path="/staff" element={<Navigate to="/users" />} />
+          <Route path="/staff" element={<Navigate to="/access-control" />} />
+          <Route path="/users" element={<Navigate to="/access-control" />} />
           <Route path="/export" element={<Export />} />
-          <Route path="/users" element={<Users />} />
           <Route path="/audit" element={<AuditLog />} />
           <Route path="/delete-requests" element={<DeleteRequests />} />
           <Route path="/profile" element={<Profile />} />
